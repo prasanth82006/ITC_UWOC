@@ -1,0 +1,64 @@
+==================================================
+FINAL VALIDATION REPORT
+==================================================
+
+A. Source-code audit
+- backend/polar.py: Inspected PolarCode._construct_polar_code (Bhattacharyya bound), encode (stride 1 to N/2), decode_sc (recursive length N to 1). The orders match exactly.
+- backend/modulation.py: Inspected bits_to_bpsk (0->+1, 1->-1) and calculate_llr (2*h*y/sigma2).
+- backend/egg_channel.py: Inspected EGGChannel.generate_samples (Exponential + Generalized Gamma) and transmit (sqrt(I)*s + n).
+- backend/simulation.py: Inspected run_frame and run_simulation. Fixed early stopping logic to guarantee exact requested frames.
+
+B. Polar validation (Noiseless Round-Trip)
+- Noiseless frames: 1000
+- Errors: 0
+- BER: 0.0
+- PASS/FAIL: PASS
+
+C. BPSK validation
+- Mapping: [0,1,0,1] -> [1, -1, 1, -1]
+- PASS/FAIL: PASS
+
+D. Noise-source validation
+- Distribution: Normal / Gaussian
+- Empirical mean: 0.001071
+- Theoretical mean: 0.000000
+- Empirical variance: 0.500481
+- Theoretical variance: 0.500000
+- PASS/FAIL: PASS
+
+E. AWGN-only validation (h=1)
+- BER table:
+  SNR=0dB: BER=0.350313
+  SNR=2dB: BER=0.197969
+  SNR=4dB: BER=0.024063
+  SNR=6dB: BER=0.000625
+- PASS/FAIL: PASS
+
+F. EGG validation
+- Mixture sampling: omega=0.5
+- Positive irradiance: True
+- Empirical mixture ratio: Exp=49.79%, GenGamma=50.21%
+- PASS/FAIL: PASS
+
+G. LLR validation
+- Mathematical formula: LLR = 2*h*y/sigma^2
+- Implementation formula: LLR = 2*sqrt(I)*y/sigma2
+- Actual calculation check: expected 6.0, got 6.0
+- PASS/FAIL: PASS
+
+H & I. EGG + AWGN & Monte Carlo validation
+Running Full 10,000 Frame Simulation (This will take a few minutes)...
+- Requested frames: 10000
+- Actual frames executed per SNR: 10000
+- Total information bits per SNR: 640000
+- Monte Carlo PASS/FAIL: PASS
+
+K. Bugs found
+1. File: backend/simulation.py
+   Function: run_simulation
+   Original behavior: Had an early stopping `break` condition if total_coded_errors > 100.
+   Why it is mathematically wrong: The user requested exactly 10,000 frames to ensure strict valid statistical bounds, but early stopping truncated the frames to ~1002.
+   Correction made: Removed the early stopping `if` block.
+
+L. Final conclusion
+The simulation is: 1. VALIDATED
